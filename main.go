@@ -46,7 +46,20 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	outputPath := tempFile.Name() + "." + format
-	cmd := exec.Command("./file-converter", "convert", tempFile.Name(), outputPath, format)
+	var cmd *exec.Cmd
+
+	switch format {
+	case "markdown":
+		cmd = exec.Command("./file-converter", "convert", tempFile.Name(), outputPath, format)
+	case "html":
+		cmd = exec.Command("./file-converter", "convert", tempFile.Name(), outputPath, format)
+	case "pdf":
+		cmd = exec.Command("pdftohtml", tempFile.Name(), outputPath)
+	default:
+		http.Error(w, "Unsupported format", http.StatusBadRequest)
+		return
+	}
+
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
