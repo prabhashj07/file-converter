@@ -36,10 +36,11 @@ button {
 }
 
 footer {
-    background-color: #f9f9f9;
+    background-color: #f2f2f2;
     padding: 1rem;
     text-align: center;
     border-top: 1px solid #ccc;
+    margin-top: 2rem;
 }
 
 .social-links {
