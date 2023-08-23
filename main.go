@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/gorilla/mux"
+	"github.com/jung-kurt/gofpdf"
 )
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -54,7 +55,13 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	case "html":
 		cmd = exec.Command("./file-converter", "convert", tempFile.Name(), outputPath, format)
 	case "pdf":
-		cmd = exec.Command("pdftohtml", tempFile.Name(), outputPath)
+		pdfPath := tempFile.Name() + ".pdf"
+		err = markdownToPDF(tempFile.Name(), pdfPath)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		cmd = exec.Command("mv", pdfPath, outputPath)
 	default:
 		http.Error(w, "Unsupported format", http.StatusBadRequest)
 		return
@@ -75,6 +82,24 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl.Execute(w, result)
+}
+
+func markdownToPDF(inputPath, outputPath string) error {
+	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf.AddPage()
+	pdf.SetFont("Arial", "B", 16)
+
+	content, err := ioutil.ReadFile(inputPath)
+	if err != nil {
+		return err
+	}
+
+	_, err = pdf.MultiCell(0, 10, string(content), gofpdf.BorderNone, gofpdf.AlignLeft, false)
+	if err != nil {
+		return err
+	}
+
+	return pdf.OutputFileAndClose(outputPath)
 }
 
 func main() {
