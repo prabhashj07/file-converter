@@ -75,7 +75,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	result := strings.TrimSpace(string(output))
 
-	tmpl, err := template.New("").Parse(`<h2>Conversion Result:</h2><pre>{{.}}</pre>`)
+	tmpl, err := template.New("").Parse(`<h2>Conversion Result:</h2><pre>{{.}}</pre><a href="/download/{{.}}">Download Result</a>`)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -84,8 +84,13 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, result)
 }
 
+func downloadHandler(w http.ResponseWriter, r *http.Request) {
+	fileName := mux.Vars(r)["filename"]
+	http.ServeFile(w, r, fileName)
+}
+
 func markdownToPDF(inputPath, outputPath string) error {
-	pdf := gofpdf.New("P", "mm", "A4", "")
+		pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()
 	pdf.SetFont("Arial", "B", 16)
 
@@ -106,6 +111,7 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", homeHandler)
 	r.HandleFunc("/upload", uploadHandler).Methods("POST")
+	r.HandleFunc("/download/{filename}", downloadHandler) // New route for downloading
 
 	http.Handle("/", r)
 
