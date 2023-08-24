@@ -18,6 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const resultText = await response.text();
             resultDiv.innerHTML = `<h2>Conversion Result:</h2><pre>${resultText}</pre>`;
+
+            // Add download link for the converted result file
+            if (formData.get('format') !== 'pdf') {
+                const downloadLink = document.createElement('a');
+                downloadLink.href = `/download?file=${formData.get('file')}.${formData.get('format')}`;
+                downloadLink.textContent = 'Download Result';
+                resultDiv.appendChild(downloadLink);
+            }
         } catch (error) {
             resultDiv.innerHTML = '<p>An error occurred during conversion. Please try again later.</p>';
             console.error(error);

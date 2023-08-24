@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -14,7 +15,7 @@ import (
 )
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles("templates/home.html")
+	tmpl, err := template.ParseFiles("home.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -75,7 +76,11 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	result := strings.TrimSpace(string(output))
 
-	tmpl, err := template.New("").Parse(`<h2>Conversion Result:</h2><pre>{{.}}</pre><a href="/download/{{.}}">Download Result</a>`)
+	tmpl, err := template.New("").Parse(`
+		<h2>Conversion Result:</h2>
+		<pre>{{.}}</pre>
+		<a href="/download/{{.}}.{{.}}">Download Result</a>
+	`)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -90,7 +95,7 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func markdownToPDF(inputPath, outputPath string) error {
-		pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()
 	pdf.SetFont("Arial", "B", 16)
 
@@ -111,7 +116,7 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", homeHandler)
 	r.HandleFunc("/upload", uploadHandler).Methods("POST")
-	r.HandleFunc("/download/{filename}", downloadHandler) // New route for downloading
+	r.HandleFunc("/download/{filename}", downloadHandler)
 
 	http.Handle("/", r)
 
